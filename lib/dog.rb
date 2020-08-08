@@ -5,6 +5,7 @@ class Dog
   def initialize(name:, breed:, id: nil)
     @name = name
     @breed = breed
+    @id = id
   end  
 
   def self.create_table
@@ -57,7 +58,27 @@ class Dog
     SQL
 
     found_dog = DB[:conn].execute(sql, id)[0]
-    binding.pry
+    Dog.new(id: found_dog[0], name: found_dog[1], breed: found_dog[2])
+  end
+
+  def self.find_or_create_by(name:, breed:)
+    dog = DB[:conn].execute("SELECT * FROM dogs WHERE name = ? AND breed = ? LIMIT 1", name, breed)
+    if !dog.empty?
+      dog_data = dog[0]
+      dog = Dog.new(id: dog_data[0], name: dog_data[1], breed: dog_data[2])
+    else
+      dog = self.create(name: name, breed: breed)
+    end
+    dog
+  end
+
+  def self.find_by_name(name)
+    sql = <<-SQL
+      SELECT * FROM dogs 
+      WHERE name = ?
+    SQL
+
+    found_dog = DB[:conn].execute(sql, name)[0]
     Dog.new(id: found_dog[0], name: found_dog[1], breed: found_dog[2])
   end
 end
